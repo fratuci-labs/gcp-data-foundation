@@ -47,7 +47,7 @@ flowchart LR
 
 | Arquivo | Descrição | Responsável |
 | :--- | :--- | :--- |
-| [`infra/main.tf`](./infra/main.tf) | Infraestrutura como Código (Terraform) utilizando módulos oficiais `cloud-foundation-fabric`, Workload Identity Federation, Cloud Run e Budget Alert de US$ 100. | Anderson |
+| [`infra/main.tf`](./infra/main.tf) | Infraestrutura como Código (Terraform) utilizando módulos oficiais `cloud-foundation-fabric`, Workload Identity Federation, Cloud Run, VM ClickHouse ARM (`t2a-standard-2`) e Budget Alert de US$ 100. | Anderson |
 | [`schemas/clickhouse_healthtech_events.sql`](./schemas/clickhouse_healthtech_events.sql) | DDL ClickHouse 26.x otimizada para ARM64 com rastreabilidade criptográfica de interações medicamentosas e telemetria de LLMs. | Anderson & Antônio |
 | [`docs/finops-policy.md`](./docs/finops-policy.md) | Política corporativa de FinOps detalhando a alocação da cota de US$ 100/mês entre Engenharia de Dados, IA, Jurídico e HealthTech. | Anderson (c/ acordo de todos os sócios) |
 
@@ -55,6 +55,6 @@ flowchart LR
 
 ## 🔐 3. Garantias de Conformidade Interdisciplinar
 
-- **Para a Diretoria Jurídica (André):** Toda resposta gerada pelo agente de IA grava no ClickHouse o `prompt_sha256`, o `legal_approval_id` e o flag `human_review_required`, atendendo ao Art. 20 da LGPD.
-- **Para a Diretoria de Farmácia & Negócios (Adriana):** As consultas de interações medicamentosas referenciam a versão exata do dicionário DCB/DCI (`pharma_dataset_version`), permitindo auditoria sanitária retroativa conforme o `POP-001`.
-- **Para a Engenharia de IA (Antônio):** Contabilização em tempo real de tokens de entrada/saída e custo estimado em USD por chamada Vertex AI / Gemini.
+- **Para a Diretoria Jurídica (André):** Toda resposta gerada pelo agente de IA grava no ClickHouse o `prompt_sha256`, o flag `legal_disclaimer_injected` e o indicador `lgpd_art20_review_flag`, atendendo ao Art. 20 da LGPD.
+- **Para a Diretoria de Farmácia & Negócios (Adriana):** As consultas de interações medicamentosas referenciam a versão exata do dicionário DCB/DCI (`pharma_dataset_version`, `pharma_dataset_sha256` e `requires_pharmacist_signoff`), permitindo auditoria sanitária retroativa conforme o `POP-001`.
+- **Para a Engenharia de IA (Antônio):** Contabilização em tempo real de tokens de entrada/saída (`input_tokens`, `output_tokens`) e custo estimado em USD (`estimated_cost_micros_usd`) por chamada Vertex AI / Gemini.

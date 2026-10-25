@@ -32,6 +32,12 @@ variable "region" {
   default     = "us-central1"
 }
 
+variable "zone" {
+  description = "Zona com disponibilidade de processadores Ampere Altra ARM64 (Tau T2A)"
+  type        = string
+  default     = "us-central1-a"
+}
+
 # ----------------------------------------------------------------------------
 # 1. Projeto e APIs Essenciais (Cloud Foundation Fabric)
 # ----------------------------------------------------------------------------
@@ -123,7 +129,38 @@ module "gemini_webhook_service" {
 }
 
 # ----------------------------------------------------------------------------
-# 4. BigQuery Dataset: Exportação FinOps & Auditoria Fria de Longo Prazo
+# 4. Motor Analítico: ClickHouse 26.x em ARM64 (Ampere Altra t2a-standard-2)
+# Sob demanda / Spot com vetorização SIMD ARM64 dentro do teto de US$ 45/mês
+# ----------------------------------------------------------------------------
+module "clickhouse_arm64_node" {
+  source        = "github.com/GoogleCloudPlatform/cloud-foundation-fabric//modules/compute-vm?ref=v31.0.0"
+  project_id    = module.project.project_id
+  zone          = var.zone
+  name          = "ch-analytics-arm64-01"
+  instance_type = "t2a-standard-2" # 2 vCPUs Ampere Altra ARM64, 8 GB RAM
+
+  boot_disk = {
+    initialize_params = {
+      image = "projects/ubuntu-os-cloud/global/images/family/ubuntu-2404-lts-arm64"
+      type  = "pd-balanced"
+      size  = 50
+    }
+  }
+
+  options = {
+    spot               = true
+    termination_action = "STOP"
+  }
+
+  labels = {
+    engine     = "clickhouse-26x-arm64"
+    role       = "healthtech-audit-telemetry"
+    finops_cap = "usd-45-allocation"
+  }
+}
+
+# ----------------------------------------------------------------------------
+# 5. BigQuery Dataset: Exportação FinOps & Auditoria Fria de Longo Prazo
 # ----------------------------------------------------------------------------
 module "finops_audit_dataset" {
   source     = "github.com/GoogleCloudPlatform/cloud-foundation-fabric//modules/bigquery-dataset?ref=v31.0.0"
@@ -139,7 +176,7 @@ module "finops_audit_dataset" {
 }
 
 # ----------------------------------------------------------------------------
-# 5. Governança FinOps: Alerta e Trava de Orçamento Mensal de US$ 100.00
+# 6. Governança FinOps: Alerta e Trava de Orçamento Mensal de US$ 100.00
 # ----------------------------------------------------------------------------
 resource "google_billing_budget" "monthly_100_usd_cap" {
   billing_account = var.billing_account_id
